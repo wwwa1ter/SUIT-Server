@@ -1,6 +1,19 @@
 # Compiled class file
 *.class
 
+#idea
+.idea/
+.idea
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+bin/
+out/
+target/
+
 # Log file
 *.log
 
