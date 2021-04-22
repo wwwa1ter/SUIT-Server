@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.plan.EverydayPlanDao">
+
+    <resultMap type="com.pose.pojo.plan.EverydayPlan" id="EverydayPlanMap">
+        <id column="report_id" property="reportId" jdbcType="VARCHAR"/>
+        <result column="total_duration" property="totalDuration" jdbcType="INTEGER"/>
+        <result column="current_duration" property="currentDuration" jdbcType="INTEGER"/>
+        <result column="date" property="date" jdbcType="DATE"/>
+        <association property="reward" javaType="com.pose.pojo.Reward">
+            <result column="report_id" property="reportId" jdbcType="VARCHAR"/>
+            <result column="reward_name" property="rewardName" jdbcType="VARCHAR"/>
+            <result column="reward_description" property="rewardDescription" jdbcType="VARCHAR"/>
+            <result column="icon" property="icon" jdbcType="INTEGER"/>
+            <result column="reward_state" jdbcType="INTEGER"/>
+        </association>
+        <collection property="corrections" javaType="java.util.List"
+                    ofType="everydayCorrection">
+            <id column="correction_id"/>
+            <result column="date" property="date" jdbcType="DATE"/>
+            <result column="state" property="state"/>
+            <association property="correction" javaType="correction">
+                <id column="correction_id" property="id"/>
+                <result column="problem_name" property="problemName"/>
+                <result column="suitable_extent" property="suitableExtent"/>
+                <result column="duration" property="duration"/>
+                <result column="frequency" property="frequency"/>
+                <result column="time" property="time"/>
+                <result column="movement_set" property="movementSet"/>
+                <association property="movement" javaType="movement">
+                    <id column="movement_name" property="name"/>
+                    <result column="description" property="description"/>
+                    <result column="content" property="content"/>
+                </association>
+            </association>
+        </collection>
+    </resultMap>
+
+
+    <insert id="addEverydayPlan" parameterType="everydayPlan">
+        insert into
+        everyday_plan(report_id, correction_id, date, state)
+        values
+        <foreach collection="corrections" index="index" item="item" separator=",">
+            (#{reportId}, #{item.correction.id}, #{date}, #{item.state})
+        </foreach>
+    </insert>
+
+    <delete id="deleteEverydayPlan" parameterType="everydayPlan">
+        delete from everyday_plan where report_id = #{reportId};
+    </delete>
+
+    <select id="queryEverydayPlan" parameterType="everydayPlan" resultMap="EverydayPlanMap">
+        select
+               p.report_id as report_id,
+               p.total_duration as total_duration,
+               p.current_duration as current_duration,
+               p.reward_name as reward_name,
+               p.reward_description as reward_description,
+               p.reward_state as reward_state,
+               p.icon as icon,
+               ep.date as date,
+               ep.state as state,
+               ep.correction_id as correction_id,
+               pc.problem_name as problem_name,
+               pc.movement_name as movement_name,
+               m.description as description,
+               m.content as content,
+               pc.suitable_extent as suitable_extent,
+               pc.duration as duration,
+               pc.frequency as frequency,
+               pc.time as time,
+               pc.movement_set as movement_set
+        from
+             everyday_plan as ep natural join plan as p join problem_correction as pc on ep.correction_id = pc.id join movement as m on pc.movement_name = m.name
+        where (ep.report_id = #{reportId} and TO_DAYS(ep.date) = TO_DAYS(CURDATE())) order by state desc
+    </select>
+
+    <update id="updateEverydayPlan" parameterType="everydayCorrection">
+        update everyday_plan set state = #{state}
+        where
+        report_id = #{reportId}
+        and TO_DAYS(date) = TO_DAYS(CURDATE())
+        and correction_id = #{correction.id}
+    </update>
+
+
+
+</mapper>

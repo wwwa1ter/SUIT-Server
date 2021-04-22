@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.GuidanceDao">
+    
+    <insert id="addGuidance" parameterType="guidance">
+        insert into
+        guidance(movement_name, sequence, image, note)
+        values
+        (#{movementName}, #{sequence}, #{image}, #{note})
+    </insert>
+
+    <delete id="deleteGuidance" parameterType="guidance">
+        delete from
+        guidance
+        where
+        movement_name = #{movementName}
+        <if test="sequence > 0">and sequence = #{sequence }</if>
+    </delete>
+
+    <select id="queryGuidance" parameterType="guidance" resultType="guidance">
+        select *
+        from
+        guidance
+        where
+        movement_name = #{movementName} and sequence = #{sequence}
+    </select>
+
+    <select id="queryGuidanceList" resultType="guidance">
+        select * from guidance where movement_name = #{movementName} order by sequence asc 
+    </select>
+    
+    <update id="updateGuidance" parameterType="guidance">
+        update guidance
+        <set>
+            <if test="image != null">image = #{image},</if>
+            <if test="note != null">note = #{note},</if>
+        </set>
+        where movement_name = #{movementName} and sequence = #{sequence}
+    </update>
+    
+</mapper>

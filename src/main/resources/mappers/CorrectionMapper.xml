@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.CorrectionDao">
+
+    <resultMap id="correctionMap" type="correction">
+        <id column="id" property="id"/>
+        <result column="problem_name" property="problemName"/>
+        <result column="suitable_extent" property="suitableExtent"/>
+        <result column="duration" property="duration"/>
+        <result column="frequency" property="frequency"/>
+        <result column="time" property="time"/>
+        <result column="movement_set" property="movementSet"/>
+        <association property="movement" javaType="movement">
+            <id column="movement_name" property="name"/>
+            <result column="description" property="description"/>
+            <result column="content" property="content"/>
+        </association>
+    </resultMap>
+
+    <insert id="addCorrection" parameterType="correction">
+        insert into
+        problem_correction(id, problem_name, movement_name, suitable_extent, duration, frequency, time, movement_set)
+        values
+        (#{id}, #{problemName}, #{movement.name}, #{suitableExtent}, #{duration}, #{frequency}, #{time}, #{movementSet})
+    </insert>
+
+    <delete id="deleteCorrectionById" >
+        delete from problem_correction where id = #{id};
+    </delete>
+
+    <select id="queryCorrectionByProblem" parameterType="problem"  resultMap="correctionMap">
+        select * from problem_correction as pc join movement as m on pc.movement_name = m.name
+        where
+        problem_name = #{name} and (suitable_extent = 0 or suitable_extent = #{extent});
+    </select>
+
+    <update id="updateCorrection" parameterType="correction" >
+        update problem_correction
+        <set>
+            <if test="problemName != null"> problem_name = #{problemName} </if>,
+            <if test="movement.name != null"> movement_name = #{movement.name} </if>,
+            <if test="suitableExtent != null">suitable_extent = #{suitableExtent}</if>,
+            <if test="duration != null">duration = #{duration}</if>,
+            <if test="frequency != null">frequency = #{frequency}</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

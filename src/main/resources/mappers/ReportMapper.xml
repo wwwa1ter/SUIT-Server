@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pose.dao.ReportDao">
+
+    <resultMap type="com.pose.pojo.Report" id="reportMap">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="date" property="date"/>
+        <association property="body" javaType="body">
+            <id property="reportId" column="id"/>
+            <result property="front" column="front"/>
+            <result property="side" column="side"/>
+            <result property="back" column="back"/>
+        </association>
+        <collection property="problems" javaType="java.util.List"
+                    ofType="com.pose.pojo.Problem">
+            <id column="problem_name" property="name" jdbcType="VARCHAR"/>
+            <result column="description" property="description" jdbcType="VARCHAR"/>
+            <result column="angle" property="angle" jdbcType="FLOAT"/>
+            <result column="extent" property="extent" jdbcType="INTEGER"/>
+            <result column="image" property="image" jdbcType="VARCHAR"/>
+            <result column="content" property="content"/>
+        </collection>
+    </resultMap>
+
+    <insert id="addReport" parameterType="report">
+        insert into report(id, user_id, date) values (#{id}, #{userId}, #{date});
+        <if test="body != null">
+            insert into report_body(report_id, front, side, back)
+            values
+            (#{id}, #{body.front}, #{body.side}, #{body.back});
+        </if>
+        <if test="problems != null">
+            insert into report_problem(report_id, problem_name, angle, extent, image)
+            values
+            <foreach collection="problems" item="item" separator="," index="index">
+                (#{id}, #{item.name}, #{item.angle}, #{item.extent}, #{item.image})
+            </foreach>
+        </if>
+    </insert>
+
+
+    <delete id="deleteReportById" >
+        delete from report where id = #{id};
+    </delete>
+
+    <select id="queryReportListByUserId" resultType="report">
+        select * from report where user_id = #{userID} order by date desc
+    </select>
+
+    <select id="queryReportById" resultMap="reportMap">
+        select distinct
+        r.id, r.user_id, r.date,
+        rb.front as front,
+        rb.side as side,
+        rb.back as back,
+        rp.problem_name as problem_name,
+        p.description as description,
+        p.content as content,
+        rp.angle as angle, rp.extent as extent, rp.image as image
+        from report as r join report_body as rb on r.id = rb.report_id join report_problem as rp on r.id = rp.report_id natural join problem as p
+        where r.id = #{id} and p.name != 'learnMore'
+    </select>
+
+    <select id="queryProblem" resultType="problem" parameterType="problem">
+        select *
+        from report_problem,problem
+        where (report_problem.problem_name = problem.name and problem_name = #{name} and report_id = #{reportId} )
+    </select>
+
+    <select id="queryBody" resultType="body">
+        select *
+        from report_body
+        where report_id = #{reportId}
+    </select>
+
+    <update id="updateProblem" parameterType="problem">
+        update report_problem
+        <set>
+            <if test="image != null"> image= #{image} </if>
+        </set>
+        where (problem_name = #{name} and report_id = #{reportId})
+    </update>
+
+    <select id="queryLatestReport" resultMap="reportMap">
+        select
+        r.id, r.user_id, r.date,
+        rp.problem_name, rp.angle, rp.extent, p.content
+        from
+        report as r join report_problem as rp on r.id = rp.report_id join problem as p on rp.problem_name = p.name
+        where r.user_id = #{userId} and date = (select max(date) from report)
+    </select>
+
+
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.ProblemDao">
+
+    <insert id="addProblem" parameterType="problem">
+        insert into problem(name, description, content) values (#{name}, #{description}, #{content})
+    </insert>
+    
+    <select id="queryProblemByName" resultType="problem">
+        select * from problem where name = #{name}
+    </select>
+
+
+</mapper>

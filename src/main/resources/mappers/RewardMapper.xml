@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.RewardDao">
+    <select id="queryRewardList" resultType="reward">
+        select
+        p.report_id, p.reward_name, p.reward_name, p.reward_description, p.reward_state, p.icon
+        from
+        report as r, plan as p where (r.id = p.report_id and r.user_id = #{userId})
+    </select>
+
+    <update id="updateReward" parameterType="reward">
+        update plan
+        <set>
+            <if test="rewardState != null">reward_state = #{rewardState}</if>
+        </set>
+        where report_id = #{reportId}
+    </update>
+
+</mapper>

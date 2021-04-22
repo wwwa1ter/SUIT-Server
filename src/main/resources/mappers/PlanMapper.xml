@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pose.dao.plan.PlanDao">
+    <resultMap type="com.pose.pojo.plan.Plan" id="PlanMap">
+        <id column="report_id" property="reportId" jdbcType="VARCHAR"/>
+        <result column="total_duration" property="totalDuration" jdbcType="INTEGER"/>
+        <result column="current_duration" property="currentDuration" jdbcType="INTEGER"/>
+        <association property="reward" javaType="com.pose.pojo.Reward">
+            <result column="report_id" property="reportId" jdbcType="VARCHAR"/>
+            <result column="reward_name" property="rewardName" jdbcType="VARCHAR"/>
+            <result column="reward_description" property="rewardDescription" jdbcType="VARCHAR"/>
+            <result column="icon" property="icon" jdbcType="INTEGER"/>
+            <result column="reward_state" jdbcType="INTEGER"/>
+        </association>
+        <collection property="corrections" javaType="java.util.List"
+                    ofType="com.pose.pojo.Correction">
+            <id column="id" property="id" jdbcType="VARCHAR"/>
+            <result column="problem_name" property="problemName" jdbcType="VARCHAR"/>
+            <result column="suitable_extent" property="suitableExtent" jdbcType="INTEGER"/>
+            <result column="duration" property="duration" jdbcType="INTEGER"/>
+            <result column="frequency" property="frequency" jdbcType="INTEGER"/>
+            <result column="time" property="time"/>
+            <result column="movement_set" property="movementSet"/>
+            <association property="movement" javaType="movement">
+                <id column="movement_name" property="name"/>
+                <result column="movement_description" property="description"/>
+                <result column="movement_content" property="content"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <insert id="addPlan" parameterType="plan">
+        insert into
+        plan(report_id, total_duration, current_duration,reward_name, reward_description, reward_state, icon)
+        values
+        (#{reportId}, #{totalDuration}, #{currentDuration},#{reward.rewardName}, #{reward.rewardDescription}, #{reward.rewardState}, #{reward.icon});
+        <if test="corrections != null">
+            insert into plan_correction(report_id, correction_id)
+            values
+            <foreach collection="corrections" index="index" item="item" separator=",">
+                (#{reportId},#{item.id})
+            </foreach>
+        </if>
+
+    </insert>
+
+    <delete id="deletePlanById">
+        delete from plan where report_id = #{reportId};
+
+    </delete>
+
+    <select id="queryPlanById" resultMap="PlanMap">
+         select distinct
+         p.report_id, p.total_duration, p.current_duration,
+         p.reward_name, p.reward_description, p.reward_state, p.icon,
+         c.id, c.problem_name, c.movement_name, c.suitable_extent, c.duration,c.frequency,
+         m.description as movement_description, m.content as movement_content
+         from
+         plan as p natural join plan_correction as pc join problem_correction as c join movement as m on c.movement_name = m.name
+         where (pc.correction_id = c.id and report_id = #{reportId})
+    </select>
+
+    <update id="updatePlan" parameterType="plan">
+        update plan
+        <set>
+            <if test="currentDuration != null">
+                current_duration = #{currentDuration}
+            </if>
+        </set>
+        where report_id = #{reportId}
+    </update>
+
+
+
+</mapper>
